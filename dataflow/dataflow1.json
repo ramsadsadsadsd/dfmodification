@@ -26,6 +26,13 @@
 						"type": "DatasetReference"
 					},
 					"name": "sink1"
+				},
+				{
+					"dataset": {
+						"referenceName": "AzureSqlTable2",
+						"type": "DatasetReference"
+					},
+					"name": "sink2"
 				}
 			],
 			"transformations": [
@@ -43,12 +50,9 @@
 				},
 				{
 					"name": "DerivedColumn1"
-				},
-				{
-					"name": "AlterRow1"
 				}
 			],
-			"script": "\n\nsource(output(\n\t\tpid as integer,\n\t\tpname as string,\n\t\tcolour as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> source1\nsource(output(\n\t\tPkey as integer,\n\t\tpid as integer,\n\t\tpname as string,\n\t\tcolour as string,\n\t\tstartdate as date,\n\t\tenddate as date\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tquery: 'select * from dimproduct',\n\tformat: 'query') ~> source2\nsource1, source2 lookup(source1@pid == source2@pid,\n\tbroadcast: 'none')~> Lookup1\nLookup1 split(isMatch(),\n\tdisjoint: false) ~> ConditionalSplit1@(match, unmatch)\nConditionalSplit1@unmatch select(mapColumn(\n\t\tpid = ConditionalSplit1@unmatch@pid,\n\t\tpname = ConditionalSplit1@unmatch@pname,\n\t\tcolour = ConditionalSplit1@unmatch@colour,\n\t\tPkey,\n\t\tpid = ConditionalSplit1@unmatch@pid,\n\t\tpname = ConditionalSplit1@unmatch@pname,\n\t\tcolour = ConditionalSplit1@unmatch@colour,\n\t\tstartdate,\n\t\tenddate\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 keyGenerate(output(surrogate as long),\n\tstartAt: 1L) ~> SurrogateKey1\nSurrogateKey1 derive(startdate = currentDate()) ~> DerivedColumn1\nConditionalSplit1@match alterRow(updateIf(true())) ~> AlterRow1\nDerivedColumn1 sink(input(\n\t\tPkey as integer,\n\t\tpid as integer,\n\t\tpname as string,\n\t\tcolour as string,\n\t\tstartdate as date,\n\t\tenddate as date\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tmapColumn(\n\t\tPkey = surrogate,\n\t\tpid,\n\t\tpname,\n\t\tcolour,\n\t\tstartdate,\n\t\tenddate\n\t)) ~> sink1"
+			"script": "\n\nsource(output(\n\t\tpid as integer,\n\t\tpname as string,\n\t\tcolour as string\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> source1\nsource(output(\n\t\tPkey as integer,\n\t\tpid as integer,\n\t\tpname as string,\n\t\tcolour as string,\n\t\tstartdate as date,\n\t\tenddate as date\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tquery: 'select * from dimproduct',\n\tformat: 'query') ~> source2\nsource1, source2 lookup(source1@pid == source2@pid,\n\tbroadcast: 'none')~> Lookup1\nLookup1 split(isMatch(),\n\tdisjoint: false) ~> ConditionalSplit1@(match, unmatch)\nConditionalSplit1@unmatch select(mapColumn(\n\t\tpid = ConditionalSplit1@unmatch@pid,\n\t\tpname = ConditionalSplit1@unmatch@pname,\n\t\tcolour = ConditionalSplit1@unmatch@colour,\n\t\tPkey,\n\t\tpid = ConditionalSplit1@unmatch@pid,\n\t\tpname = ConditionalSplit1@unmatch@pname,\n\t\tcolour = ConditionalSplit1@unmatch@colour,\n\t\tstartdate,\n\t\tenddate\n\t),\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true) ~> Select1\nSelect1 keyGenerate(output(surrogate as long),\n\tstartAt: 1L) ~> SurrogateKey1\nSurrogateKey1 derive(startdate = currentDate()) ~> DerivedColumn1\nDerivedColumn1 sink(input(\n\t\tPkey as integer,\n\t\tpid as integer,\n\t\tpname as string,\n\t\tcolour as string,\n\t\tstartdate as date,\n\t\tenddate as date\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:true,\n\tupdateable:false,\n\tupsertable:false,\n\tformat: 'table',\n\tmapColumn(\n\t\tPkey = surrogate,\n\t\tpid,\n\t\tpname,\n\t\tcolour,\n\t\tstartdate,\n\t\tenddate\n\t)) ~> sink1\nConditionalSplit1@match sink(input(\n\t\tPkey as integer,\n\t\tpid as integer,\n\t\tpname as string,\n\t\tcolour as string,\n\t\tstartdate as date,\n\t\tenddate as date\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tdeletable:false,\n\tinsertable:false,\n\tupdateable:true,\n\tupsertable:false,\n\tkeys:['sink2@pid'],\n\tformat: 'table') ~> sink2"
 		}
 	}
 }
