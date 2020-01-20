@@ -1,0 +1,43 @@
+{
+	"name": "AzureSqlTable2",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureSqlDatabase1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "Pkey",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "pid",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "pname",
+				"type": "varchar"
+			},
+			{
+				"name": "colour",
+				"type": "varchar"
+			},
+			{
+				"name": "startdate",
+				"type": "date"
+			},
+			{
+				"name": "enddate",
+				"type": "date"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "Dimproduct"
+		}
+	}
+}
